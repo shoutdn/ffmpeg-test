@@ -36,8 +36,7 @@
 #include <libavutil/opt.h>
 #include <libavutil/imgutils.h>
 
-static void encode(AVCodecContext* enc_ctx, AVFrame* frame, AVPacket* pkt,
-    FILE* outfile)
+static void encode(AVCodecContext* enc_ctx, AVFrame* frame, AVPacket* pkt,FILE* outfile)
 {
     int ret;
 

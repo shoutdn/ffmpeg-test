@@ -24,15 +24,16 @@
     <ClCompile Include="encodeing.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="remuxing.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="avio_reading.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="demo.h">
       <Filter>头文件</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="所用视频.txt">
-      <Filter>资源文件</Filter>
-    </Text>
   </ItemGroup>
 </Project>

@@ -144,13 +144,12 @@
   <ItemGroup>
     <ClCompile Include="demuxing_decoding.c" />
     <ClCompile Include="encodeing.c" />
+    <ClCompile Include="avio_reading.c" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="remuxing.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="demo.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="所用视频.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
