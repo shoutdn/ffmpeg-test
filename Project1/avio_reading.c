@@ -58,11 +58,13 @@ static int read_packet(void* opaque, uint8_t* buf, int buf_size)
 
 int avio_reading()
 {
+
+
+    char* input_filename = NULL;
     AVFormatContext* fmt_ctx = NULL;
     AVIOContext* avio_ctx = NULL;
     uint8_t* buffer = NULL, * avio_ctx_buffer = NULL;
     size_t buffer_size, avio_ctx_buffer_size = 4096;
-    char* input_filename = NULL;
     int ret = 0;
     struct buffer_data bd = { 0 };
 

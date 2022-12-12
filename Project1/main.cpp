@@ -1,8 +1,6 @@
-extern "C" {
-#include "demo.h"
-}
+#include "encode.h"
 
 int main() {
 	//demuxing_decoding();
-	encodeing();
+	encodevideo();
 }

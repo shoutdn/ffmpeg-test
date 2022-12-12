@@ -49,9 +49,7 @@ int remuxing()
 {
 
     const char* in_filename = "D:\\userData\\dataSet\\videos\\test\\60_mpeg4.mp4";
-    const char* out_filename = "D:\\userData\\dataSet\\videos\\test\\60_mpeg4.";;
-
-
+    const char* out_filename = "D:\\userData\\dataSet\\videos\\test\\60_mpeg4.";
 
     AVOutputFormat* ofmt = NULL;
     AVFormatContext* ifmt_ctx = NULL, * ofmt_ctx = NULL;

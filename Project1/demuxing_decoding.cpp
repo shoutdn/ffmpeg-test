@@ -30,10 +30,13 @@
   */
 
 #include "demo.h"
+extern "C" {
 #include <libavutil/imgutils.h>
 #include <libavutil/samplefmt.h>
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
+}
+
 
 static AVFormatContext* fmt_ctx = NULL;
 static AVCodecContext* video_dec_ctx = NULL, * audio_dec_ctx;
@@ -69,7 +72,7 @@ static int output_video_frame(AVFrame* frame)
             "new: width = %d, height = %d, format = %s\n",
             width, height, av_get_pix_fmt_name(pix_fmt),
             frame->width, frame->height,
-            av_get_pix_fmt_name(frame->format));
+            av_get_pix_fmt_name((AVPixelFormat)frame->format));
         return -1;
     }
 
@@ -89,10 +92,7 @@ static int output_video_frame(AVFrame* frame)
 
 static int output_audio_frame(AVFrame* frame)
 {
-    size_t unpadded_linesize = frame->nb_samples * av_get_bytes_per_sample(frame->format);
-    printf("audio_frame n:%d nb_samples:%d pts:%s\n",
-        audio_frame_count++, frame->nb_samples,
-        av_ts2timestr(frame->pts, &audio_dec_ctx->time_base));
+    size_t unpadded_linesize = frame->nb_samples * av_get_bytes_per_sample((AVSampleFormat)frame->format);
 
     /* Write the raw audio data samples of the first plane. This works
      * fine for packed formats (e.g. AV_SAMPLE_FMT_S16). However,
@@ -114,7 +114,12 @@ static int decode_packet(AVCodecContext* dec, const AVPacket* pkt)
     // submit the packet to the decoder
     ret = avcodec_send_packet(dec, pkt);
     if (ret < 0) {
-        fprintf(stderr, "Error submitting a packet for decoding (%s)\n", av_err2str(ret));
+        char errbuf[256];
+        memset(errbuf, 0, 256);
+        av_strerror(ret, errbuf, 256);
+        fprintf(stderr, "Error submitting a packet for decoding (%s)\n", errbuf);
+       
+
         return ret;
     }
 
@@ -127,7 +132,10 @@ static int decode_packet(AVCodecContext* dec, const AVPacket* pkt)
             if (ret == AVERROR_EOF || ret == AVERROR(EAGAIN))
                 return 0;
 
-            fprintf(stderr, "Error during decoding (%s)\n", av_err2str(ret));
+            char errbuf[256];
+            memset(errbuf, 0, 256);
+            av_strerror(ret, errbuf, 256);
+            fprintf(stderr, "Error during decoding (%s)\n", errbuf);
             return ret;
         }
 
@@ -229,7 +237,6 @@ static int get_format_from_sample_fmt(const char** fmt,
 
 int demuxing_decoding()
 {
-
     const char* src_filename = "D:\\vsProject\\Project1\\60s_h264.mp4";
     const char* video_dst_filename = "D:\\vsProject\\Project1\\60s_h264.rawdata";
     const char* audio_dst_filename = NULL;
@@ -248,7 +255,6 @@ int demuxing_decoding()
 
     if (open_codec_context(&video_stream_idx, &video_dec_ctx, fmt_ctx, AVMEDIA_TYPE_VIDEO) >= 0) {
         video_stream = fmt_ctx->streams[video_stream_idx];
-
         video_dst_file = fopen(video_dst_filename, "wb");
         if (!video_dst_file) {
             fprintf(stderr, "Could not open destination file %s\n", video_dst_filename);
