@@ -18,22 +18,5 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="demuxing_decoding.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="remuxing.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="avio_reading.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="encode.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="encode.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

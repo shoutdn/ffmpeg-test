@@ -142,14 +142,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="demuxing_decoding.cpp" />
-    <ClCompile Include="encode.cpp" />
-    <ClCompile Include="avio_reading.c" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="remuxing.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="encode.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
