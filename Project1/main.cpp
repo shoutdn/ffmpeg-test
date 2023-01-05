@@ -1,27 +1,78 @@
-
-#define __STDC_CONSTANT_MACROS
 extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavutil/imgutils.h>
-#include <libavutil/samplefmt.h>
-#include <libavutil/timestamp.h>
+//#include <libavcodec/avcodec.h>
+//#include <libavutil/imgutils.h>
+//#include <libavutil/samplefmt.h>
+//#include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
-#include <libavutil/fifo.h>
+//#include <libavutil/fifo.h>
 }
 
+#include <queue>
 #include <iostream>
 #include <string>
+#include <mutex>
+#include <condition_variable>
+#include <chrono>
+#include <atomic>
+struct IMG {
+	unsigned size;
+	AVPacket packet;
+};
+
+std::queue<AVPacket> packet_queue;
+//std::mutex packet_mutex;
+//std::condition_variable packet_con;
+
+
+//void writeVideo(AVFormatContext* outputContext) {
+//
+//	//读取输入流
+//	bool hasKey = false;
+//
+//	int frame_num = 0;
+//	for (;;) {
+//		std::unique_lock<std::mutex> lkk(packet_mutex);
+//		bool go = packet_con.wait_for(lkk, std::chrono::milliseconds(100),[&]{ return packet_queue.size() > 0; });
+//		if (!go) {
+//			continue;
+//		}
+//
+//		IMG img = packet_queue.front();
+//		packet_queue.pop();
+//		lkk.unlock();
+//
+//		//if (++frame_num < 100) continue;
+//		if (++frame_num > 10000) break;
+//		if (!hasKey) {
+//			if (!(img.packet.flags & AV_PKT_FLAG_KEY)) {
+//				continue;
+//			}
+//			else {
+//				hasKey = true;
+//			}
+//		}
+//
+//		std::cout << "packet_size: " << img.size << std::endl;
+//		av_interleaved_write_frame(outputContext, &img.packet);
+//	}
+//
+//	av_write_trailer(outputContext);
+//	avio_closep(&outputContext->pb);
+//	avformat_free_context(outputContext);
+//	outputContext = nullptr;
+//}
+
 
 void testDemuxer() {
-	const char* inputFileUrl = "D:/vsProject/Project1/GK88_mpeg4.mp4";
+	std::string inputFileUrl = "D:/vsProject/Project1/GK88_mpeg4.mp4";
 
 	//解封装
 	AVFormatContext* inputContext = nullptr;
-	avformat_open_input(&inputContext, inputFileUrl, NULL, NULL);
+	avformat_open_input(&inputContext, inputFileUrl.c_str(), NULL, NULL);
 	avformat_find_stream_info(inputContext, NULL);
 
 	//打印视频封装信息
-	av_dump_format(inputContext, 0, inputFileUrl, 0);
+	av_dump_format(inputContext, 0, inputFileUrl.c_str(), 0);
 
 	//分离音频流和视频流
 	AVStream* audioInputStream = nullptr;
@@ -36,16 +87,17 @@ void testDemuxer() {
 		else continue;
 	}
 
+
 	//重封装
-	const char* outputFileUrl = "test_output.mp4";
+	std::string outputFileUrl = "test_output.mp4";
 	AVFormatContext* outputContext = nullptr;
 	//根据输出文件后缀推测封装格式
-	avformat_alloc_output_context2(&outputContext, NULL, NULL, outputFileUrl);
+	avformat_alloc_output_context2(&outputContext, NULL, NULL, outputFileUrl.c_str());
 	//添加音频流和视频流
 	AVStream* videoOutputStream = avformat_new_stream(outputContext, NULL);
 	//AVStream* audioOutputStream = avformat_new_stream(outputContext, NULL);
 	//打开IO流
-	avio_open(&outputContext->pb, outputFileUrl, AVIO_FLAG_WRITE);
+	avio_open(&outputContext->pb, outputFileUrl.c_str(), AVIO_FLAG_WRITE);
 	//将输入视频流的封装配置复制至输出视频流
 	videoOutputStream->time_base = videoInputStream->time_base;
 	avcodec_parameters_copy(videoOutputStream->codecpar, videoInputStream->codecpar);
@@ -54,53 +106,66 @@ void testDemuxer() {
 	// avcodec_parameters_copy(audioOutputStream->codecpar, audioInputStream->codecpar);
 	//写入文件头信息
 	avformat_write_header(outputContext, NULL);
-	av_dump_format(outputContext, 0, outputFileUrl, 1);
+	av_dump_format(outputContext, 0, outputFileUrl.c_str(), 1);
 
-	//读取输入流
-	AVPacket packet;
+	
+	/*std::thread* write_thread = new std::thread(writeVideo, outputContext);*/
+	
+	int read_num = 0;
 	int frame_num = 0;
 	bool hasKey = false;
 	for (;;)
 	{
-		int result = av_read_frame(inputContext, &packet);
+		AVPacket packet_tmp;
+		AVPacket packet;
+		
+
+		/*AVPacket packet_tmp2;
+		AVPacket packet_tmp3;*/
+		int result = av_read_frame(inputContext, &packet_tmp);
+		if (result == 0) {
+			packet = packet_tmp;
+			/*av_packet_ref(&packet_tmp2, &packet_tmp);
+			av_packet_ref(&packet_tmp3, &packet_tmp);*/
+			//av_packet_unref(&packet_tmp);
+
+
+
+			if (++read_num > 10000) {
+				break;
+			}
+		}
+		
+		/*AVPacket packet_write;
+		av_packet_ref(&packet_write,&packet_queue.front());
+		av_packet_unref(&packet_queue.front());
+		packet_queue.pop();
+		av_packet_unref(&packet_queue.front());*/
 		if (result != 0) break;
 		if (++frame_num < 100) continue;
 		if (frame_num >= 10000) break;
 		if (!hasKey) {
-			if (!(packet.flags & AV_PKT_FLAG_KEY)) {
-				continue;
-			}
-			else {
+			if ((packet.flags & AV_PKT_FLAG_KEY)) {
 				hasKey = true;
 			}
+			else {
+				continue;
+			}
 		}
-
-
-
-		if (packet.stream_index == videoOutputStream->index)
-		{
-			std::cout << "视频:";
-		}
-		// else if (packet.stream_index == audioOutputStream->index) {
-		// 	std::cout << "音频:";
-		// }
-		std::cout << packet.pts << " : " << packet.dts << " :" << packet.size << std::endl;
 
 		av_interleaved_write_frame(outputContext, &packet);
 	}
-	std::cout << "frame sum :" << frame_num << std::endl;
+
+
+
 	av_write_trailer(outputContext);
-	avformat_close_input(&inputContext);
 	avio_closep(&outputContext->pb);
 	avformat_free_context(outputContext);
 	outputContext = nullptr;
+	avformat_close_input(&inputContext);
 }
 
-int main(int argc, char** argv)
+int main()
 {
-	//testYUV();
-	//demuxer_decode();
-	//encode_video();
 	testDemuxer();
-	return 0;
 }
